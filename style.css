@@ -1,0 +1,56 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #333;
+}
+
+#classifieds-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.classified-card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.classified-card h2 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: #007bff;
+}
+
+.classified-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.classified-card .price {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.classified-card .location {
+    color: #6c757d;
+}
+
+.classified-card .published {
+    font-size: 0.8em;
+    color: #888;
+}
