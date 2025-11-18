@@ -18,8 +18,11 @@ async function fetchClassifiedsFromNostr(until) {
     const relayUrls = [
         'wss://relay.damus.io',
         'wss://nos.lol',
-        'wss://relay.nostr.net'
-    ];
+        'wss://relay.nostr.net',
+        'wss://relay.snort.social',
+        'wss://nostr.wine',
+        'wss://purplepag.es'
+    ]; // More relays for better coverage
 
     const allEvents = [];
     const subId = 'classifieds_' + Math.random().toString(36).substring(2);
@@ -46,7 +49,7 @@ function connectAndFetch(relayUrl, subId, until) {
         let eoseReceived = false;
 
         ws.onopen = () => {
-            const filter = { kinds: [30402], limit: 50 };
+            const filter = { kinds: [30402], limit: 100 };
             if (until !== undefined) {
                 filter.until = until;
             }

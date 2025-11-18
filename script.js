@@ -10,7 +10,7 @@ let lastTimestamp = null;
 let seenIds = new Set();
 let loadCount = 0;
 const MAX_AUTO_LOADS = 3;
-const BATCH_SIZE = 20; // Assumed from API
+const BATCH_SIZE = 20; // For reference, but not strictly used for end detection
 
 async function fetchClassifieds(append = false) {
     try {
@@ -27,13 +27,16 @@ async function fetchClassifieds(append = false) {
         newEvents.forEach(event => seenIds.add(event.id));
         displayClassifieds(newEvents, append);
         if (newEvents.length > 0) {
-            lastTimestamp = newEvents[newEvents.length - 1].created_at;
+            lastTimestamp = newEvents[newEvents.length - 1].created_at - 1; // Subtract 1 to avoid potential overlaps
         }
         loadCount++;
         updateLoadingUI(newEvents.length);
+        if (!append) {
+            document.getElementById('initial-loading').style.display = 'none';
+        }
     } catch (error) {
         const list = document.getElementById('classifieds-list');
-        list.innerHTML += '<p>Error loading more classifieds: ' + error.message + '</p>';
+        list.insertAdjacentHTML('beforeend', '<p class="no-more">Error loading more classifieds: ' + error.message + '</p>');
     }
 }
 
@@ -44,7 +47,7 @@ function displayClassifieds(events, append = false) {
     }
 
     if (events.length === 0 && list.innerHTML === '') {
-        list.innerHTML = '<p>No classifieds found.</p>';
+        list.innerHTML = '<p class="no-more">No classifieds found.</p>';
         return;
     }
 
@@ -91,16 +94,16 @@ function initInfiniteScroll() {
 function updateLoadingUI(newCount) {
     const loading = document.getElementById('loading');
     const loadMore = document.getElementById('load-more');
+    const list = document.getElementById('classifieds-list');
 
-    if (newCount < BATCH_SIZE) {
-        // Assume no more
+    if (newCount === 0) {
+        // No more
         loading.style.display = 'none';
         loadMore.style.display = 'none';
-        const list = document.getElementById('classifieds-list');
-        list.insertAdjacentHTML('beforeend', '<p>No more classifieds to load.</p>');
+        list.insertAdjacentHTML('beforeend', '<p class="no-more">No more classifieds to load.</p>');
     } else if (loadCount >= MAX_AUTO_LOADS) {
         loading.style.display = 'none';
         loadMore.style.display = 'block';
     }
-    // Else, keep loading visible for auto
+    // Else, keep loading visible for auto-scroll
 }

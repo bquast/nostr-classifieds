@@ -74,3 +74,10 @@ h1 {
 #load-more:hover {
     background-color: #0056b3;
 }
+
+.no-more {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #888;
+    margin: 20px 0;
+}
