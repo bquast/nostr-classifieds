@@ -1,26 +1,49 @@
 document.addEventListener('DOMContentLoaded', () => {
-    fetchClassifieds();
+    fetchClassifieds(false);
+    initInfiniteScroll();
+    document.getElementById('load-more').addEventListener('click', () => {
+        fetchClassifieds(true);
+    });
 });
 
-async function fetchClassifieds() {
+let lastTimestamp = null;
+let seenIds = new Set();
+let loadCount = 0;
+const MAX_AUTO_LOADS = 3;
+const BATCH_SIZE = 20; // Assumed from API
+
+async function fetchClassifieds(append = false) {
     try {
-        const response = await fetch('/api');
+        let url = '/api';
+        if (lastTimestamp !== null) {
+            url += `?until=${lastTimestamp}`;
+        }
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error('Failed to fetch classifieds');
         }
         const events = await response.json();
-        displayClassifieds(events);
+        const newEvents = events.filter(event => !seenIds.has(event.id));
+        newEvents.forEach(event => seenIds.add(event.id));
+        displayClassifieds(newEvents, append);
+        if (newEvents.length > 0) {
+            lastTimestamp = newEvents[newEvents.length - 1].created_at;
+        }
+        loadCount++;
+        updateLoadingUI(newEvents.length);
     } catch (error) {
         const list = document.getElementById('classifieds-list');
-        list.innerHTML = '<p>Error loading classifieds: ' + error.message + '</p>';
+        list.innerHTML += '<p>Error loading more classifieds: ' + error.message + '</p>';
     }
 }
 
-function displayClassifieds(events) {
+function displayClassifieds(events, append = false) {
     const list = document.getElementById('classifieds-list');
-    list.innerHTML = ''; // Clear loading message
+    if (!append) {
+        list.innerHTML = ''; // Clear for initial load
+    }
 
-    if (events.length === 0) {
+    if (events.length === 0 && list.innerHTML === '') {
         list.innerHTML = '<p>No classifieds found.</p>';
         return;
     }
@@ -53,4 +76,31 @@ function displayClassifieds(events) {
 function getTag(event, name) {
     const tag = event.tags.find(t => t[0] === name);
     return tag ? tag[1] : null;
+}
+
+function initInfiniteScroll() {
+    const sentinel = document.getElementById('loading');
+    const observer = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && loadCount < MAX_AUTO_LOADS) {
+            fetchClassifieds(true);
+        }
+    });
+    observer.observe(sentinel);
+}
+
+function updateLoadingUI(newCount) {
+    const loading = document.getElementById('loading');
+    const loadMore = document.getElementById('load-more');
+
+    if (newCount < BATCH_SIZE) {
+        // Assume no more
+        loading.style.display = 'none';
+        loadMore.style.display = 'none';
+        const list = document.getElementById('classifieds-list');
+        list.insertAdjacentHTML('beforeend', '<p>No more classifieds to load.</p>');
+    } else if (loadCount >= MAX_AUTO_LOADS) {
+        loading.style.display = 'none';
+        loadMore.style.display = 'block';
+    }
+    // Else, keep loading visible for auto
 }
